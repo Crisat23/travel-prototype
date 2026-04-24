@@ -1,0 +1,2756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel app — v1 prototype</title>
+<style>
+  :root {
+    --bg-page: #FAF9F5;
+    --bg-surface: #F1EFE8;
+    --bg-card: #FFFFFF;
+    --bg-soft: #FAF9F5;
+    --bg-tag: #F1EFE8;
+    --bg-tag-active: #1A1A19;
+    --text-primary: #1A1A19;
+    --text-secondary: #5F5E5A;
+    --text-tertiary: #888780;
+    --text-invert: #FFFFFF;
+    --text-accent: #0C447C;
+    --bg-accent: #E6F1FB;
+    --text-success: #1C5A3C;
+    --bg-success: #E3EFE5;
+    --text-travel: #6B4A00;
+    --bg-travel: #FAF3DF;
+    --text-warn: #854F0B;
+    --bg-warn: #FAEEDA;
+    --text-danger: #A32D2D;
+    --bg-danger: #FDF6F6;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --divider: rgba(0,0,0,0.06);
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --pin-stay: #7B5DB8;
+    --pin-transport: #2E7A5F;
+    --pin-dining: #D85A30;
+    --pin-sights: #0C6BA8;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
+    font-size: 15px; line-height: 1.5;
+    height: 100%;
+  }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px 16px; min-height: 100vh;
+  }
+
+  /* ============ PHONE FRAME ============ */
+  .phone {
+    width: 390px; height: 820px;
+    background: var(--bg-page);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 32px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    position: relative;
+  }
+
+  .status-bar {
+    height: 28px;
+    background: var(--bg-card);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 22px;
+    font-size: 12px; color: var(--text-primary);
+    font-weight: 500; flex-shrink: 0;
+  }
+
+  /* ============ TOP BAR ============ */
+  .top-bar {
+    background: var(--bg-card);
+    padding: 12px 16px;
+    border-bottom: 0.5px solid var(--divider);
+    display: flex; align-items: center; gap: 10px;
+    flex-shrink: 0; min-height: 52px;
+  }
+  .top-bar-back {
+    font-size: 13px; color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    white-space: nowrap;
+  }
+  .top-bar-title { font-size: 16px; font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .top-bar-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-surface);
+    cursor: pointer; font-size: 15px;
+    user-select: none; flex-shrink: 0;
+  }
+  .top-bar-icon:hover { background: var(--border); }
+
+  /* ============ SCREEN CONTAINER ============ */
+  .screen-area {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    display: flex; flex-direction: column;
+    position: relative;
+  }
+
+  /* ============ BOTTOM TABS ============ */
+  .tab-bar {
+    background: var(--bg-card);
+    border-top: 0.5px solid var(--border);
+    padding: 8px 0 14px;
+    display: flex; flex-shrink: 0;
+  }
+  .tab-bar.hidden { display: none; }
+  .tab {
+    flex: 1;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; font-size: 10px;
+    color: var(--text-tertiary);
+    cursor: pointer; user-select: none;
+    padding: 4px 0;
+  }
+  .tab .icon { opacity: 0.55; transition: opacity 0.15s; color: var(--text-tertiary); }
+  .tab.active { color: var(--text-primary); font-weight: 500; }
+  .tab.active .icon { opacity: 1; color: var(--text-primary); }
+
+  /* ============ TRIPS LIST ============ */
+  .trips-header { padding: 18px 18px 10px; }
+  .trips-title { font-size: 24px; font-weight: 500; margin: 0; }
+  .trips-list { padding: 6px 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .trip-card {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.12s, box-shadow 0.12s;
+  }
+  .trip-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  }
+  .trip-card-name { font-size: 16px; font-weight: 500; }
+  .trip-card-cities { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+  .trip-card-meta { font-size: 12px; color: var(--text-tertiary); margin-top: 6px; display: flex; gap: 8px; }
+  .trip-card-status {
+    display: inline-block; font-size: 10px;
+    padding: 2px 8px; border-radius: 999px;
+    font-weight: 500; margin-top: 8px;
+  }
+  .trip-card-status.upcoming { background: var(--bg-travel); color: var(--text-travel); }
+  .trip-card-status.current { background: var(--bg-success); color: var(--text-success); }
+  .trip-card-status.past { background: var(--bg-surface); color: var(--text-tertiary); }
+
+  .fab {
+    position: absolute;
+    bottom: 82px; right: 20px;
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--text-primary); color: var(--text-invert);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    user-select: none; z-index: 5;
+  }
+  .fab:hover { background: #000; }
+  .fab.hidden { display: none; }
+
+  /* ============ TRIP DETAIL ============ */
+  .trip-header { padding: 14px 16px 10px; border-bottom: 0.5px solid var(--divider); }
+  .trip-detail-name { font-size: 20px; font-weight: 500; margin: 0; }
+  .trip-detail-meta { font-size: 12px; color: var(--text-secondary); margin: 2px 0 0; }
+
+  /* ============ ITINERARY ============ */
+  .day {
+    padding: 14px 16px;
+    border-bottom: 0.5px solid var(--divider);
+  }
+  .day:last-child { border-bottom: none; }
+  .day-header {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 0.5px solid var(--divider);
+  }
+  .day-num {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-tertiary); text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .day-date { font-size: 15px; font-weight: 500; }
+  .day-city { font-size: 12px; color: var(--text-secondary); }
+  .day-badge {
+    font-size: 10px; font-weight: 500;
+    padding: 1px 7px; border-radius: 999px;
+    margin-left: auto;
+  }
+  .day-badge.travel { color: var(--text-travel); background: var(--bg-travel); }
+
+  .items { display: flex; flex-direction: column; gap: 6px; position: relative; }
+  .item {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px 10px 8px;
+    display: flex; align-items: center; gap: 8px;
+    transition: box-shadow 0.15s, border-color 0.15s;
+    user-select: none; touch-action: none;
+  }
+  .item.dragging { opacity: 0.4; }
+  .item.floating {
+    position: fixed; z-index: 200;
+    pointer-events: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    border-color: var(--text-accent);
+    transform: rotate(1deg);
+    background: var(--bg-card);
+  }
+  .drag-handle {
+    color: var(--text-tertiary);
+    font-size: 14px; line-height: 1;
+    cursor: grab; padding: 0 2px;
+    width: 12px; text-align: center;
+    flex-shrink: 0; user-select: none;
+  }
+  .drag-handle:hover { color: var(--text-primary); }
+  .item-icon {
+    width: 30px; height: 30px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .item-icon.stay { background: #F0EAF8; }
+  .item-icon.transport { background: #E5F1EB; }
+  .item-icon.dining { background: #FBE8DF; }
+  .item-icon.sights { background: var(--bg-accent); }
+  .item-body { flex: 1; min-width: 0; cursor: pointer; }
+  .item-name {
+    font-size: 13px; font-weight: 500;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .item-sub {
+    font-size: 11px; color: var(--text-secondary); margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .item-time {
+    font-size: 10px; color: var(--text-tertiary);
+    flex-shrink: 0; padding-left: 6px;
+    border-left: 0.5px solid var(--divider); margin-left: 2px;
+  }
+  .item-remove {
+    color: var(--text-tertiary);
+    cursor: pointer; font-size: 14px;
+    padding: 0 4px; user-select: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+  .item:hover .item-remove { opacity: 1; }
+  .item-remove:hover { color: var(--text-danger); }
+
+  .drop-indicator {
+    height: 3px; background: var(--text-accent);
+    border-radius: 2px; margin: -2px 0 -1px;
+    opacity: 0; transition: opacity 0.1s;
+  }
+  .drop-indicator.visible { opacity: 1; }
+
+  .empty-day {
+    padding: 12px; text-align: center;
+    font-size: 12px; color: var(--text-tertiary);
+    border: 0.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+  }
+  .empty-day .link { color: var(--text-accent); cursor: pointer; }
+
+  /* ============ DISCOVER ============ */
+  .city-picker {
+    display: flex; gap: 6px;
+    padding: 10px 16px;
+    overflow-x: auto;
+    border-bottom: 0.5px solid var(--divider);
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .city-picker::-webkit-scrollbar { display: none; }
+  .city-btn {
+    padding: 5px 11px; font-size: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .city-btn.active {
+    background: var(--text-primary); color: var(--text-invert);
+    font-weight: 500;
+  }
+
+  .cat-tabs {
+    display: flex;
+    border-bottom: 0.5px solid var(--divider);
+    padding: 0 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab {
+    padding: 10px 10px; font-size: 12px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -0.5px;
+    user-select: none; white-space: nowrap;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .cat-tab.active {
+    color: var(--text-primary); font-weight: 500;
+    border-bottom-color: var(--text-primary);
+  }
+
+  .suggestions { padding: 12px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .suggestion {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.1s;
+  }
+  .suggestion:hover { border-color: var(--border-strong); }
+  .suggestion.added {
+    border-color: var(--text-success);
+    background: linear-gradient(var(--bg-success), var(--bg-success)) top/100% 3px no-repeat, var(--bg-card);
+  }
+  .sug-top {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 8px;
+  }
+  .sug-name { font-size: 13px; font-weight: 500; }
+  .sug-rating { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+  .sug-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .sug-external {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    text-decoration: none;
+    transition: background 0.1s, color 0.1s;
+  }
+  .sug-external:hover {
+    background: var(--text-accent);
+    color: white;
+  }
+  .star { color: #D0A020; }
+  .sug-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+  .sug-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+  .sug-tag {
+    font-size: 10px; color: var(--text-secondary);
+    background: var(--bg-surface);
+    padding: 1px 7px; border-radius: 999px;
+  }
+
+  /* ============ MAP ============ */
+  .map-container {
+    flex: 1;
+    display: flex; flex-direction: column;
+    background: #E6F1FB;
+    position: relative;
+    min-height: 0;
+  }
+  .map-filters {
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.95);
+    border-bottom: 0.5px solid var(--divider);
+    display: flex; gap: 5px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-shrink: 0;
+  }
+  .map-filters::-webkit-scrollbar { display: none; }
+  .map-filter {
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 999px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    border: 0.5px solid var(--border);
+    display: flex; align-items: center; gap: 5px;
+    white-space: nowrap;
+  }
+  .map-filter .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .map-filter[data-cat="stay"] .dot { background: var(--pin-stay); }
+  .map-filter[data-cat="transport"] .dot { background: var(--pin-transport); }
+  .map-filter[data-cat="dining"] .dot { background: var(--pin-dining); }
+  .map-filter[data-cat="sights"] .dot { background: var(--pin-sights); }
+  .map-filter.active[data-cat="stay"] { background: var(--pin-stay); color: white; border-color: transparent; }
+  .map-filter.active[data-cat="transport"] { background: var(--pin-transport); color: white; border-color: transparent; }
+  .map-filter.active[data-cat="dining"] { background: var(--pin-dining); color: white; border-color: transparent; }
+  .map-filter.active[data-cat="sights"] { background: var(--pin-sights); color: white; border-color: transparent; }
+  .map-filter.active .dot { background: white; }
+  .map-svg-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-svg { width: 100%; height: 100%; display: block; }
+  .pin {
+    cursor: pointer;
+    transition: transform 0.15s;
+    transform-origin: center bottom;
+  }
+  .pin:hover { transform: scale(1.15); }
+  .pin.selected { transform: scale(1.3); }
+
+  .map-popup {
+    position: absolute;
+    bottom: 14px; left: 14px; right: 14px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: none;
+  }
+  .map-popup.visible { display: block; }
+  .popup-name { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .popup-meta { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; }
+  .popup-actions { display: flex; gap: 6px; margin-top: 6px; }
+  .popup-btn {
+    font-size: 11px; padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg-card); cursor: pointer;
+    user-select: none; color: var(--text-primary);
+    flex: 1; text-align: center;
+  }
+  .popup-btn-primary {
+    background: var(--text-primary); color: var(--text-invert);
+    border-color: var(--text-primary); font-weight: 500;
+  }
+
+  /* ============ SETTINGS ============ */
+  .settings-list { padding: 8px 0; }
+  .settings-row {
+    display: flex; align-items: center;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border-top: 0.5px solid var(--divider);
+    border-bottom: 0.5px solid var(--divider);
+    cursor: pointer;
+    margin-bottom: -0.5px;
+  }
+  .settings-row:hover { background: var(--bg-soft); }
+  .settings-row-icon {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    background: var(--bg-surface);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; margin-right: 12px;
+  }
+  .settings-row-text { flex: 1; font-size: 14px; }
+  .settings-row-sub {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .settings-row-chevron { color: var(--text-tertiary); font-size: 14px; }
+
+  /* Settings sub-page styling */
+  .sp-body {
+    padding: 16px;
+  }
+  .sp-section {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 14px 14px;
+    margin-bottom: 14px;
+  }
+  .sp-section-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin: 0 0 4px;
+  }
+  .sp-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .sp-field {
+    margin-bottom: 10px;
+  }
+  .sp-field:last-child { margin-bottom: 0; }
+  .sp-label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  .sp-select {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    outline: none;
+  }
+  .sp-toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    cursor: pointer;
+  }
+  .sp-toggle-row + .sp-toggle-row {
+    border-top: 0.5px solid var(--divider);
+  }
+  .sp-toggle-info { flex: 1; }
+  .sp-toggle-label { font-size: 13px; font-weight: 500; }
+  .sp-toggle-desc {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+  .sp-toggle {
+    width: 34px;
+    height: 20px;
+    background: var(--border-strong);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.15s;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .sp-toggle.on { background: var(--text-primary); }
+  .sp-toggle::after {
+    content: "";
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 16px; height: 16px;
+    background: var(--bg-card);
+    border-radius: 50%;
+    transition: transform 0.15s;
+  }
+  .sp-toggle.on::after {
+    transform: translateX(14px);
+  }
+  .settings-section-label {
+    padding: 14px 16px 6px;
+    font-size: 10px; font-weight: 500;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .settings-profile {
+    padding: 18px 16px;
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg-card);
+    border-bottom: 0.5px solid var(--divider);
+  }
+  .settings-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--bg-accent); color: var(--text-accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 500;
+  }
+  .settings-name { font-size: 15px; font-weight: 500; }
+  .settings-email { font-size: 12px; color: var(--text-tertiary); }
+
+  /* ============ MODAL ============ */
+  .modal-backdrop {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none; z-index: 100;
+    animation: fadeIn 0.2s ease;
+  }
+  .modal-backdrop.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal-sheet {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    max-height: 92%;
+    background: var(--bg-card);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    transition: transform 0.25s ease;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-backdrop.active .modal-sheet { transform: translateY(0); }
+  .modal-handle {
+    width: 36px; height: 4px;
+    background: var(--border-strong);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+  .modal-header {
+    padding: 12px 18px 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .modal-title { font-size: 17px; font-weight: 500; }
+  .modal-close {
+    font-size: 20px; color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+  }
+  .modal-close:hover { background: var(--bg-surface); }
+  .modal-body {
+    flex: 1; overflow-y: auto;
+    padding: 0 18px 18px;
+  }
+
+  /* NEW TRIP DIALOG FIELDS */
+  .nt-section { margin-bottom: 18px; }
+  .nt-section-title {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin: 0 0 8px;
+  }
+  .nt-field { margin-bottom: 10px; }
+  .nt-label {
+    display: block; font-size: 12px;
+    color: var(--text-secondary); margin-bottom: 4px;
+  }
+  .nt-field input, .nt-field select {
+    width: 100%; padding: 8px 10px;
+    font-size: 13px; font-family: inherit;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card); outline: none;
+  }
+  .nt-field input.invalid {
+    border-color: var(--text-danger);
+    background: var(--bg-danger);
+  }
+  .nt-field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .nt-traveler-row {
+    display: flex; gap: 6px;
+    margin-bottom: 5px; align-items: center;
+  }
+  .nt-traveler-row input { flex: 1; }
+  .nt-primary-pill {
+    font-size: 9px; font-weight: 500;
+    color: var(--text-accent); background: var(--bg-accent);
+    padding: 2px 7px; border-radius: 999px;
+    letter-spacing: 0.3px; flex-shrink: 0;
+  }
+  .nt-remove {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-tertiary); cursor: pointer;
+    font-size: 14px; border: 0.5px solid var(--border);
+    user-select: none; flex-shrink: 0;
+  }
+  .nt-remove:hover { color: var(--text-danger); border-color: var(--text-danger); }
+  .nt-hint { font-size: 11px; color: var(--text-danger); margin-top: 2px; }
+  .nt-add-link {
+    font-size: 12px; color: var(--text-accent);
+    cursor: pointer; user-select: none; display: inline-block;
+    margin-top: 4px;
+  }
+
+  .nt-chip-group { display: flex; flex-wrap: wrap; gap: 5px; }
+  .nt-chip {
+    font-size: 12px; padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--bg-tag); color: var(--text-secondary);
+    cursor: pointer; user-select: none;
+    position: relative;
+  }
+  .nt-chip.active {
+    background: var(--bg-tag-active); color: var(--text-invert);
+  }
+  .nt-chip.from-settings::after {
+    content: "";
+    position: absolute;
+    top: -2px; right: -2px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-accent);
+    border: 1.5px solid var(--bg-card);
+  }
+
+  /* Badges showing source of a field (from Settings / overridden) */
+  .nt-source-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text-accent);
+    background: var(--bg-accent);
+    padding: 1px 7px;
+    border-radius: 999px;
+    margin-left: 4px;
+    vertical-align: middle;
+    letter-spacing: 0.2px;
+  }
+  .nt-source-badge.overridden {
+    color: var(--text-warn);
+    background: var(--bg-warn);
+  }
+
+  /* Hint inside preferences section */
+  .nt-prefs-hint {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin: -4px 0 10px;
+    line-height: 1.5;
+  }
+
+  .nt-select {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--text-primary);
+    background: var(--bg-card);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    outline: none;
+  }
+
+  .nt-stay {
+    background: var(--bg-card);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px; margin-bottom: 6px;
+  }
+  .nt-stay-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 6px;
+  }
+  .nt-stay-label {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-tertiary); text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .nt-stay-label.origin, .nt-stay-label.return { color: var(--text-accent); }
+  .nt-stay-body { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 6px; }
+  .nt-stay-body.two-col { grid-template-columns: 1.4fr 1fr; }
+  .nt-stay-body input { padding: 6px 8px; font-size: 12px; }
+  .nt-stay-body .nt-label { font-size: 10px; margin-bottom: 2px; }
+  .nt-transit {
+    padding: 4px 0 4px 14px;
+    position: relative;
+  }
+  .nt-transit::before {
+    content: "";
+    position: absolute;
+    left: 17px; top: 0; bottom: 0;
+    border-left: 1px dashed var(--border-strong);
+  }
+  .nt-transit-card {
+    background: var(--bg-soft);
+    border: 0.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 7px 10px;
+    margin-left: 12px;
+    font-size: 11px; color: var(--text-secondary);
+  }
+  .nt-transit-card strong { color: var(--text-primary); font-weight: 500; }
+  .nt-transit-editable {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .nt-transit-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nt-transit-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    width: 40px;
+    flex-shrink: 0;
+    font-weight: 500;
+  }
+  .nt-transit-select {
+    flex: 1;
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+  .nt-add-stay {
+    margin-top: 8px; padding: 8px;
+    text-align: center; font-size: 12px;
+    color: var(--text-tertiary);
+    border: 0.5px dashed var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer; user-select: none;
+  }
+
+  .modal-footer {
+    padding: 12px 18px;
+    border-top: 0.5px solid var(--border);
+    display: flex; gap: 8px;
+    flex-shrink: 0;
+  }
+  .btn {
+    flex: 1; padding: 10px;
+    font-size: 14px; font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: 0.5px solid var(--border-strong);
+    background: var(--bg-card); color: var(--text-primary);
+    user-select: none; text-align: center;
+  }
+  .btn:hover { background: var(--bg-surface); }
+  .btn-primary {
+    background: var(--text-primary); color: var(--text-invert);
+    border-color: var(--text-primary);
+  }
+  .btn-primary.disabled {
+    background: var(--border-strong); border-color: var(--border-strong);
+    color: var(--bg-card); cursor: not-allowed; opacity: 0.7;
+  }
+
+  /* DETAILS PHOTOS - gallery pattern (main image + thumbnail strip) */
+  .details-photos {
+    background: var(--bg-surface);
+    position: relative;
+    flex-shrink: 0;
+  }
+  .details-photo-main {
+    height: 180px;
+    background: linear-gradient(135deg, #B5C8D4 0%, #8BA7B8 100%);
+    position: relative;
+  }
+  .details-photo-main-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+  .details-photo-main-link:hover .details-photo-main::after {
+    opacity: 1;
+  }
+  .details-photo-main::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+  }
+  .details-photo-visit {
+    position: absolute;
+    bottom: 10px;
+    right: 14px;
+    background: rgba(0,0,0,0.6);
+    color: white;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+    max-width: 55%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .details-close-floating {
+    position: absolute;
+    top: 10px; right: 10px;
+    z-index: 3;
+  }
+  .details-photo-main::before {
+    content: "";
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at 30% 40%, rgba(255,255,255,0.2), transparent 60%),
+                radial-gradient(circle at 70% 70%, rgba(0,0,0,0.1), transparent 60%);
+  }
+  .details-photo-placeholder {
+    position: absolute; bottom: 10px; left: 14px;
+    background: rgba(0,0,0,0.5); color: white;
+    font-size: 10px; padding: 3px 9px;
+    border-radius: 999px; font-weight: 500;
+    backdrop-filter: blur(8px);
+  }
+  .details-photo-strip {
+    display: flex;
+    gap: 4px;
+    padding: 6px;
+    background: var(--bg-card);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .details-photo-strip::-webkit-scrollbar { display: none; }
+  .details-photo-thumb {
+    width: 56px; height: 56px;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+    cursor: pointer;
+    background: linear-gradient(135deg, #B5C8D4 0%, #8BA7B8 100%);
+    border: 1.5px solid transparent;
+    transition: border-color 0.1s;
+  }
+  .details-photo-thumb:hover { border-color: var(--border-strong); }
+  .details-photo-thumb.active {
+    border-color: var(--text-primary);
+  }
+  .details-photo-thumb.more {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-surface);
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .details-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: rgba(0,0,0,0.5); color: white;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 16px; user-select: none;
+    backdrop-filter: blur(4px);
+  }
+  .details-body { padding: 16px 18px 18px; }
+  .details-name { font-size: 18px; font-weight: 500; margin: 0 0 4px; }
+  .details-sub {
+    font-size: 12px; color: var(--text-secondary);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .details-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--text-tertiary); }
+  .details-section {
+    padding: 14px 0;
+    border-top: 0.5px solid var(--divider);
+  }
+  .info-row {
+    display: flex; align-items: flex-start;
+    gap: 10px; padding: 6px 0;
+    font-size: 12px;
+  }
+  .info-icon {
+    width: 18px; color: var(--text-tertiary);
+    flex-shrink: 0; font-size: 13px;
+  }
+  .info-value { flex: 1; color: var(--text-primary); }
+  .info-value .sub { color: var(--text-secondary); font-size: 11px; display: block; margin-top: 1px; }
+  .info-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .info-link:hover { border-bottom-color: var(--text-secondary); }
+  .info-link-accent {
+    color: var(--text-accent);
+    font-weight: 500;
+    border-bottom: none;
+  }
+  .info-link-accent:hover { text-decoration: underline; }
+  .open-now { color: var(--text-success); font-weight: 500; }
+  .hours-list {
+    margin-top: 4px; font-size: 11px;
+    color: var(--text-secondary); line-height: 1.8;
+  }
+  .hours-list .today { color: var(--text-primary); font-weight: 500; }
+  .details-section-title {
+    font-size: 10px; font-weight: 500;
+    color: var(--text-tertiary);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .review { padding: 8px 0; border-bottom: 0.5px solid var(--divider); }
+  .review:last-child { border-bottom: none; }
+  .review-top {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 3px;
+  }
+  .review-author { font-size: 12px; font-weight: 500; }
+  .review-stars { font-size: 10px; color: var(--text-secondary); }
+  .review-text { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* DAY PICKER (inside details modal) */
+  .day-menu {
+    position: absolute;
+    bottom: 72px; right: 18px;
+    background: var(--bg-card);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    padding: 5px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    display: none;
+    z-index: 150;
+    min-width: 220px;
+    max-height: 280px;
+    overflow-y: auto;
+  }
+  .day-menu.active { display: block; }
+  .day-menu-item {
+    padding: 7px 10px; font-size: 12px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .day-menu-item:hover { background: var(--bg-surface); }
+  .day-menu-item.mismatch { opacity: 0.6; }
+
+  /* TOAST */
+  .toast {
+    position: absolute;
+    bottom: 90px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--text-primary); color: var(--text-invert);
+    padding: 8px 16px; border-radius: var(--radius-md);
+    font-size: 12px; opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none; z-index: 250;
+    white-space: nowrap;
+  }
+  .toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* HELPER TEXT OUTSIDE PHONE */
+  .helper {
+    position: fixed;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    max-width: 580px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.95);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 12px; color: var(--text-secondary);
+    text-align: center;
+    backdrop-filter: blur(8px);
+    z-index: 50;
+  }
+  .helper strong { color: var(--text-primary); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>● ● ●</span>
+  </div>
+
+  <!-- Top bar (content set by router) -->
+  <div class="top-bar" id="top-bar"></div>
+
+  <!-- Screen area (content rendered by router) -->
+  <div class="screen-area" id="screen-area"></div>
+
+  <!-- Bottom tab bar (shown only on trip detail) -->
+  <div class="tab-bar hidden" id="tab-bar">
+    <div class="tab" data-tab="discover">
+      <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="20" y1="20" x2="16.5" y2="16.5"/></svg>
+      <span>Discover</span>
+    </div>
+    <div class="tab" data-tab="itinerary">
+      <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/></svg>
+      <span>Itinerary</span>
+    </div>
+    <div class="tab" data-tab="map">
+      <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="2,6 9,3 15,6 22,3 22,18 15,21 9,18 2,21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Map</span>
+    </div>
+  </div>
+
+  <!-- FAB (only on trips list) -->
+  <div class="fab hidden" id="fab" onclick="openNewTrip()">+</div>
+
+  <!-- Modal overlays -->
+  <div class="modal-backdrop" id="modal"></div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+</div>
+
+<div class="helper">
+  <strong>A compressed v1 tour:</strong> Home → pick a trip or + to create one → inside a trip, try all three bottom tabs → tap ⚙ from home for Settings → tap any suggestion for details.
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+
+// User (would come from auth in production)
+const user = {
+  name: "Sarah Chen",
+  email: "sarah.chen@example.com",
+  initials: "SC",
+  homeCity: "Cleveland, OH"
+};
+
+// User settings — persistent across pages (in-memory for this demo)
+const userSettings = {
+  // Travel style
+  flightClass: "Business",
+  trainClass: "First class",
+  transfers: new Set(["Uber", "Private car service"]),
+  loyalty: new Set(["United MileagePlus", "Marriott Bonvoy"]),
+  // Lodging
+  lodging: new Set(["Hotel", "Boutique hotel"]),
+  amenities: new Set(["Wi-Fi", "Air conditioning"]),
+  location: new Set(["City center", "Walkable neighborhood"]),
+  // Dining
+  cuisines: new Set(["Local / regional", "Italian"]),
+  prices: new Set(["$$ Mid-range", "$$$ Upscale"]),
+  dietary: new Set(["Gluten-free"]),
+  meals: new Set(["Breakfast", "Lunch", "Dinner"]),
+  // Sightseeing
+  sights: new Set(["Architecture", "Museums", "Local neighborhoods"]),
+  pace: "Moderate (3-4 things/day)",
+  accessibility: new Set(),
+  // App prefs
+  dateFormat: "US",
+  distanceUnit: "miles",
+  tempUnit: "F",
+  currency: "USD",
+  theme: "system",
+  // Notifications
+  notifyCheckins: true,
+  notifyDepartures: true,
+  notifyDayBefore: false,
+  notifyPriceDrops: true,
+  notifyPush: true,
+  notifyEmail: true,
+  notifySms: false
+};
+
+// Curated tag catalogs
+const CATALOG = {
+  flightClass: ["Economy", "Premium economy", "Business", "First class"],
+  trainClass: ["Standard", "Standard Premier / Comfort", "First class", "Business Premier"],
+  transfers: ["Uber", "Lyft", "Taxi", "Private car service", "Rental car"],
+  loyalty: ["United MileagePlus", "Delta SkyMiles", "American AAdvantage", "British Airways Exec Club", "Marriott Bonvoy", "Hilton Honors", "IHG One Rewards", "Hyatt", "Global Entry / TSA PreCheck"],
+  lodging: ["Hotel", "Boutique hotel", "Resort", "Airbnb / VRBO", "Bed & breakfast", "Hostel", "Aparthotel"],
+  amenities: ["Wi-Fi", "Air conditioning", "Kitchen", "Washer/dryer", "Pool", "Gym", "Parking", "Pet-friendly", "Workspace/desk"],
+  location: ["City center", "Near transit", "Quiet area", "Walkable neighborhood", "Beachfront", "Near airport"],
+  cuisines: ["Local / regional", "Italian", "French", "Japanese", "Chinese", "Thai", "Indian", "Mexican", "Mediterranean", "Seafood", "Steakhouse", "Vegetarian", "Street food", "Pizza", "Sushi", "Brunch", "Bakery & coffee"],
+  prices: ["$ Budget", "$$ Mid-range", "$$$ Upscale", "$$$$ Fine dining"],
+  dietary: ["Vegetarian", "Vegan", "Gluten-free", "Halal", "Kosher", "Dairy-free", "Nut allergy", "Shellfish allergy"],
+  meals: ["Breakfast", "Lunch", "Dinner", "Coffee & snacks", "Late night"],
+  sights: ["Architecture", "Museums", "Art galleries", "Historical sites", "Religious sites", "Nature / parks", "Hiking", "Beaches", "Scenic viewpoints", "Local neighborhoods", "Markets", "Shopping districts", "Nightlife", "Live music", "Theater", "Family-friendly", "Off-the-beaten-path"],
+  pace: ["Relaxed (1-2 things/day)", "Moderate (3-4 things/day)", "Packed (5+ things/day)"],
+  accessibility: ["Wheelchair accessible", "Step-free access", "Elevator available", "Quiet/sensory-friendly"]
+};
+
+// Which groups are single-select (most are multi-select)
+const SINGLE_SELECT = new Set(["pace"]);
+
+// Real Google Places data for London
+const PLACES = {
+  London: {
+    stay: [
+      { id: "ls1", cat: "stay", name: "Park Plaza Westminster", meta: "Westminster", rating: 4.5, reviews: 13481, tags: ["Hotel", "Central"], lat: 51.5010, lng: -0.1169, address: "200 Westminster Bridge Rd, London SE1 7UT", phone: "+44 333 400 6112", website: "https://www.parkplazawestminster.com/" },
+      { id: "ls2", cat: "stay", name: "hub Westminster Abbey", meta: "Westminster", rating: 4.5, reviews: 3431, tags: ["Hotel", "Budget"], lat: 51.4995, lng: -0.1315, address: "21 Tothill St, London SW1H 9LL", phone: "+44 330 128 1341", website: "https://www.premierinn.com/gb/en/hotels/england/greater-london/london/hub-london-westminster-abbey.html" },
+      { id: "ls3", cat: "stay", name: "Strand Palace", meta: "Covent Garden", rating: 4.2, reviews: 9874, tags: ["Hotel", "Central"], lat: 51.5109, lng: -0.1208, address: "372 Strand, London WC2R 0JJ", phone: "+44 20 7379 4737", website: "https://www.strandpalacehotel.co.uk/" }
+    ],
+    transport: [
+      { id: "lt1", cat: "transport", name: "Eurostar to Paris", meta: "St Pancras · ~2h 20m", rating: null, reviews: null, tags: ["Train", "Standard Premier"], lat: 51.5320, lng: -0.1258, address: "St Pancras International", metaSub: "Seats from £175", website: "https://www.eurostar.com/" }
+    ],
+    dining: [
+      { id: "ld1", cat: "dining", name: "Dishoom Covent Garden", meta: "Covent Garden · Indian · $$", rating: 4.6, reviews: 12043, tags: ["Indian", "$$"], lat: 51.5128, lng: -0.1264, address: "12 Upper St Martin's Ln, London WC2H 9FB", phone: "+44 20 7420 9320", website: "https://www.dishoom.com/covent-garden/" },
+      { id: "ld2", cat: "dining", name: "Ave Mario", meta: "Covent Garden · Italian · $$", rating: 4.8, reviews: 27698, tags: ["Italian", "$$"], lat: 51.5109, lng: -0.1240, address: "15 Henrietta St, London WC2E 8QG", website: "https://www.bigmammagroup.com/en/trattorias/ave-mario" },
+      { id: "ld3", cat: "dining", name: "Flat Iron", meta: "Covent Garden · Steak · $$", rating: 4.6, reviews: 10369, tags: ["Steak", "$$"], lat: 51.5108, lng: -0.1241, address: "17-18 Henrietta St, London WC2E 8QH", website: "https://flatironsteak.co.uk/" },
+      { id: "ld4", cat: "dining", name: "Brother Marcus", meta: "Covent Garden · Med · $$", rating: 4.9, reviews: 4847, tags: ["Mediterranean", "$$"], lat: 51.5128, lng: -0.1264, address: "23 Slingsby Pl, London WC2E 9AB", phone: "+44 20 4553 6470", website: "https://brothermarcus.co.uk/" }
+    ],
+    sights: [
+      { id: "lg1", cat: "sights", name: "The British Museum", meta: "Bloomsbury", rating: 4.7, reviews: 171912, tags: ["Museums", "History"], lat: 51.5194, lng: -0.1270, address: "Great Russell St, London WC1B 3DG", phone: "+44 20 7323 8299", hours: ["Mon 10–5","Tue 10–5","Wed 10–5","Thu 10–5","Fri 10–8:30","Sat 10–5","Sun 10–5"], website: "https://www.britishmuseum.org/" },
+      { id: "lg2", cat: "sights", name: "The National Gallery", meta: "Trafalgar Square", rating: 4.8, reviews: 60921, tags: ["Museums", "Art"], lat: 51.5089, lng: -0.1283, address: "Trafalgar Square, London WC2N 5DN", phone: "+44 20 7747 2885", website: "https://www.nationalgallery.org.uk/" },
+      { id: "lg3", cat: "sights", name: "Victoria and Albert Museum", meta: "South Kensington", rating: 4.8, reviews: 66517, tags: ["Architecture", "Museums"], lat: 51.4966, lng: -0.1722, address: "Cromwell Rd, London SW7 2RL", website: "https://www.vam.ac.uk/" },
+      { id: "lg4", cat: "sights", name: "Tate Modern", meta: "Bankside", rating: 4.5, reviews: 81733, tags: ["Art", "Museums"], lat: 51.5076, lng: -0.0994, address: "Bankside, London SE1 9TG", phone: "+44 20 7887 8888", website: "https://www.tate.org.uk/visit/tate-modern" },
+      { id: "lg5", cat: "sights", name: "The Wallace Collection", meta: "Marylebone", rating: 4.8, reviews: 10361, tags: ["Art", "Museums"], lat: 51.5173, lng: -0.1531, address: "Manchester Square, London W1U 3BN", phone: "+44 20 7563 9500", website: "https://www.wallacecollection.org/" }
+    ]
+  }
+};
+
+// Trips (the Europe trip is the active demo)
+const trips = [
+  {
+    id: "trip-europe",
+    name: "Europe trip",
+    cities: ["London", "Paris", "Brussels"],
+    origin: "Cleveland, OH",
+    originDate: "2026-05-10",
+    returnDate: "2026-05-20",
+    status: "upcoming",
+    travelers: [
+      { id: 1, name: "Sarah Chen", primary: true },
+      { id: 2, name: "Alex Chen", primary: false }
+    ],
+    stays: [
+      { id: "st1", city: "London", checkIn: "2026-05-11", checkOut: "2026-05-14" },
+      { id: "st2", city: "Paris", checkIn: "2026-05-14", checkOut: "2026-05-17" },
+      { id: "st3", city: "Brussels", checkIn: "2026-05-17", checkOut: "2026-05-20" }
+    ],
+    // Day items keyed by date
+    dayItems: {
+      "2026-05-11": [
+        { id: "di1", category: "stay", name: "Park Plaza Westminster", sub: "Checked in · through May 14", time: "" },
+        { id: "di2", category: "sights", placeId: "lg1", name: "The British Museum", sub: "Bloomsbury · Museums", time: "Morning" },
+        { id: "di3", category: "dining", placeId: "ld1", name: "Dishoom Covent Garden", sub: "Indian · $$", time: "Dinner" }
+      ],
+      "2026-05-12": [
+        { id: "di4", category: "sights", placeId: "lg2", name: "The National Gallery", sub: "Trafalgar Square · Art", time: "Morning" }
+      ],
+      "2026-05-14": [
+        { id: "di5", category: "transport", name: "Eurostar to Paris", sub: "Standard Premier · ~2h 20m", time: "Midday" }
+      ]
+    }
+  },
+  {
+    id: "trip-tokyo",
+    name: "Tokyo & Kyoto",
+    cities: ["Tokyo", "Kyoto"],
+    origin: "Cleveland, OH",
+    originDate: "2026-08-14",
+    returnDate: "2026-08-23",
+    status: "upcoming",
+    travelers: [{ id: 1, name: "Sarah Chen", primary: true }],
+    stays: [],
+    dayItems: {}
+  },
+  {
+    id: "trip-lisbon",
+    name: "Lisbon weekend",
+    cities: ["Lisbon"],
+    origin: "Cleveland, OH",
+    originDate: "2026-02-14",
+    returnDate: "2026-02-16",
+    status: "past",
+    travelers: [{ id: 1, name: "Sarah Chen", primary: true }],
+    stays: [],
+    dayItems: {}
+  }
+];
+
+// Router state
+const app = {
+  screen: "trips",              // "trips" | "trip" | "settings"
+  settingsPage: null,           // null = main settings menu; or "travel" | "lodging" | "dining" | "sights" | "notifications" | "app"
+  activeTripId: null,
+  tab: "discover",              // "discover" | "itinerary" | "map"
+  discoverCat: "sights",        // which category tab in Discover
+  discoverCity: "London",       // which city in Discover
+  mapFilters: new Set(["stay", "transport", "dining", "sights"]),
+  selectedPinId: null
+};
+
+function currentTrip() {
+  return trips.find(t => t.id === app.activeTripId);
+}
+
+/* ============================================================
+   ROUTING
+   ============================================================ */
+
+function goto(screen, tripId) {
+  app.screen = screen;
+  if (tripId !== undefined) app.activeTripId = tripId;
+  if (screen === "trip") {
+    app.tab = "discover";
+    app.selectedPinId = null;
+  }
+  if (screen !== "settings") {
+    app.settingsPage = null;
+  }
+  render();
+  document.getElementById("screen-area").scrollTop = 0;
+}
+
+function gotoSettingsPage(page) {
+  app.screen = "settings";
+  app.settingsPage = page;
+  render();
+  document.getElementById("screen-area").scrollTop = 0;
+}
+
+function switchTab(tab) {
+  app.tab = tab;
+  app.selectedPinId = null;
+  render();
+  document.getElementById("screen-area").scrollTop = 0;
+}
+
+/* ============================================================
+   MAIN RENDER
+   ============================================================ */
+
+function render() {
+  renderTopBar();
+  renderScreen();
+  renderTabBar();
+  renderFab();
+}
+
+function renderTopBar() {
+  const bar = document.getElementById("top-bar");
+  if (app.screen === "trips") {
+    bar.innerHTML = `
+      <div class="top-bar-title">Trips</div>
+      <div class="top-bar-icon" onclick="goto('settings')" title="Settings">⚙</div>
+    `;
+  } else if (app.screen === "trip") {
+    const t = currentTrip();
+    bar.innerHTML = `
+      <span class="top-bar-back" onclick="goto('trips')">← Trips</span>
+      <div class="top-bar-title">${t?.name || ""}</div>
+      <div class="top-bar-icon" title="Trip options">⋯</div>
+    `;
+  } else if (app.screen === "settings") {
+    if (app.settingsPage) {
+      const titles = {
+        travel: "Travel style",
+        lodging: "Lodging preferences",
+        dining: "Dining preferences",
+        sights: "Sightseeing preferences",
+        notifications: "Notifications",
+        app: "Display & units"
+      };
+      bar.innerHTML = `
+        <span class="top-bar-back" onclick="gotoSettingsPage(null)">← Settings</span>
+        <div class="top-bar-title">${titles[app.settingsPage] || ""}</div>
+      `;
+    } else {
+      bar.innerHTML = `
+        <span class="top-bar-back" onclick="goto('trips')">← Trips</span>
+        <div class="top-bar-title">Settings</div>
+      `;
+    }
+  }
+}
+
+function renderScreen() {
+  const area = document.getElementById("screen-area");
+  if (app.screen === "trips") renderTripsList(area);
+  else if (app.screen === "trip") renderTripDetail(area);
+  else if (app.screen === "settings") renderSettings(area);
+}
+
+function renderTabBar() {
+  const bar = document.getElementById("tab-bar");
+  bar.classList.toggle("hidden", app.screen !== "trip");
+  bar.querySelectorAll(".tab").forEach(t => {
+    t.classList.toggle("active", t.dataset.tab === app.tab);
+    t.onclick = () => switchTab(t.dataset.tab);
+  });
+}
+
+function renderFab() {
+  const fab = document.getElementById("fab");
+  fab.classList.toggle("hidden", app.screen !== "trips");
+}
+
+/* ============================================================
+   TRIPS LIST SCREEN
+   ============================================================ */
+
+function renderTripsList(area) {
+  const upcomingTrips = trips.filter(t => t.status === "upcoming");
+  const pastTrips = trips.filter(t => t.status === "past");
+
+  const fmtDateRange = (t) => {
+    const s = new Date(t.originDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const e = new Date(t.returnDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    return `${s} – ${e}`;
+  };
+  const dayCount = (t) => {
+    const diff = Math.round((new Date(t.returnDate) - new Date(t.originDate)) / 86400000);
+    return diff + " days";
+  };
+
+  area.innerHTML = `
+    <div class="trips-header">
+      <h1 class="trips-title">Your trips</h1>
+    </div>
+    <div class="trips-list">
+      ${upcomingTrips.map(t => `
+        <div class="trip-card" onclick="goto('trip', '${t.id}')">
+          <div class="trip-card-name">${t.name}</div>
+          <div class="trip-card-cities">${t.cities.join(" · ")}</div>
+          <div class="trip-card-meta">
+            <span>${fmtDateRange(t)}</span>
+            <span>·</span>
+            <span>${dayCount(t)}</span>
+          </div>
+          <span class="trip-card-status upcoming">Upcoming</span>
+        </div>
+      `).join("")}
+      ${pastTrips.map(t => `
+        <div class="trip-card" onclick="goto('trip', '${t.id}')">
+          <div class="trip-card-name">${t.name}</div>
+          <div class="trip-card-cities">${t.cities.join(" · ")}</div>
+          <div class="trip-card-meta">
+            <span>${fmtDateRange(t)}</span>
+            <span>·</span>
+            <span>${dayCount(t)}</span>
+          </div>
+          <span class="trip-card-status past">Past</span>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+/* ============================================================
+   TRIP DETAIL — three tabs
+   ============================================================ */
+
+function renderTripDetail(area) {
+  if (app.tab === "itinerary") renderItinerary(area);
+  else if (app.tab === "discover") renderDiscover(area);
+  else if (app.tab === "map") renderMap(area);
+}
+
+/* ======= ITINERARY ======= */
+
+function renderItinerary(area) {
+  const t = currentTrip();
+  if (!t) return;
+
+  const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const getDates = () => {
+    const dates = [];
+    let d = new Date(t.originDate);
+    const end = new Date(t.returnDate);
+    while (d <= end) {
+      dates.push(d.toISOString().slice(0, 10));
+      d.setDate(d.getDate() + 1);
+    }
+    return dates;
+  };
+  const cityForDate = (date) => {
+    // First day: origin → first stay (travel)
+    // Days within a stay: that city
+    // Stay transitions: travel day
+    const stay = t.stays.find(s => date >= s.checkIn && date < s.checkOut);
+    if (stay) return { city: stay.city, travel: false };
+    // Check-out day
+    const endingStay = t.stays.find(s => s.checkOut === date);
+    if (endingStay) {
+      // Is there a next stay starting this date?
+      const nextStay = t.stays.find(s => s.checkIn === date);
+      if (nextStay) return { city: `${endingStay.city} → ${nextStay.city}`, travel: true };
+      // Otherwise heading home
+      return { city: `${endingStay.city} → ${t.origin.split(",")[0]}`, travel: true };
+    }
+    // Origin day
+    if (date === t.originDate) {
+      const firstStay = t.stays[0];
+      return firstStay ? { city: `${t.origin.split(",")[0]} → ${firstStay.city}`, travel: true } : { city: t.origin, travel: false };
+    }
+    return { city: "—", travel: false };
+  };
+
+  const dates = getDates();
+  area.innerHTML = `
+    <div class="trip-header">
+      <h2 class="trip-detail-name">${t.name}</h2>
+      <p class="trip-detail-meta">${t.cities.join(" · ")} · ${fmtDate(t.originDate)} – ${fmtDate(t.returnDate)}</p>
+    </div>
+    <div id="days"></div>
+  `;
+
+  const daysEl = document.getElementById("days");
+  dates.forEach((date, idx) => {
+    const { city, travel } = cityForDate(date);
+    const items = t.dayItems[date] || [];
+    const dayEl = document.createElement("div");
+    dayEl.className = "day";
+    dayEl.innerHTML = `
+      <div class="day-header">
+        <span class="day-num">Day ${idx + 1}</span>
+        <span class="day-date">${fmtDate(date)}</span>
+        <span class="day-city">· ${city}</span>
+        ${travel ? '<span class="day-badge travel">Travel</span>' : ''}
+      </div>
+      <div class="items" data-date="${date}"></div>
+    `;
+    daysEl.appendChild(dayEl);
+    renderDayItems(date);
+  });
+}
+
+function renderDayItems(date) {
+  const t = currentTrip();
+  const itemsEl = document.querySelector(`.items[data-date="${date}"]`);
+  if (!itemsEl) return;
+  itemsEl.innerHTML = "";
+  const items = t.dayItems[date] || [];
+  if (!items.length) {
+    itemsEl.innerHTML = `<div class="empty-day">Nothing planned · <span class="link" onclick="switchTab('discover')">Browse suggestions</span></div>`;
+    return;
+  }
+  items.forEach((item, idx) => {
+    const el = document.createElement("div");
+    el.className = "item";
+    el.dataset.itemId = item.id;
+    const icon = { stay: "🏨", transport: "🚄", dining: "🍽", sights: "🗺" }[item.category] || "📍";
+    el.innerHTML = `
+      <div class="drag-handle" aria-label="Drag to reorder">⋮⋮</div>
+      <div class="item-icon ${item.category}">${icon}</div>
+      <div class="item-body" onclick="openDetailsFromItem('${item.id}')">
+        <div class="item-name">${item.name}</div>
+        <div class="item-sub">${item.sub}</div>
+      </div>
+      ${item.time ? `<div class="item-time">${item.time}</div>` : ""}
+      <span class="item-remove" onclick="removeItem('${date}', '${item.id}')">×</span>
+    `;
+    const handle = el.querySelector(".drag-handle");
+    handle.addEventListener("mousedown", (e) => startDrag(e, date, idx, item, el));
+    handle.addEventListener("touchstart", (e) => startDrag(e, date, idx, item, el), { passive: false });
+
+    // Drop indicators
+    if (idx === 0) {
+      const topInd = document.createElement("div");
+      topInd.className = "drop-indicator";
+      topInd.dataset.date = date;
+      topInd.dataset.insertIdx = "0";
+      itemsEl.appendChild(topInd);
+    }
+    itemsEl.appendChild(el);
+    const ind = document.createElement("div");
+    ind.className = "drop-indicator";
+    ind.dataset.date = date;
+    ind.dataset.insertIdx = String(idx + 1);
+    itemsEl.appendChild(ind);
+  });
+}
+
+function removeItem(date, itemId) {
+  const t = currentTrip();
+  if (!t.dayItems[date]) return;
+  t.dayItems[date] = t.dayItems[date].filter(i => i.id !== itemId);
+  if (!t.dayItems[date].length) delete t.dayItems[date];
+  renderDayItems(date);
+}
+
+// Drag state for reorder
+let dragState = null;
+
+function startDrag(e, date, idx, item, sourceEl) {
+  e.preventDefault();
+  const point = getPoint(e);
+  const rect = sourceEl.getBoundingClientRect();
+  const floatingEl = sourceEl.cloneNode(true);
+  floatingEl.classList.add("floating");
+  floatingEl.style.width = `${rect.width}px`;
+  floatingEl.style.left = `${rect.left}px`;
+  floatingEl.style.top = `${rect.top}px`;
+  document.body.appendChild(floatingEl);
+  sourceEl.classList.add("dragging");
+  dragState = {
+    date, fromIdx: idx, sourceItem: item, sourceEl, floatingEl,
+    pointerOffset: { x: point.x - rect.left, y: point.y - rect.top },
+    currentTargetIdx: idx
+  };
+  document.addEventListener("mousemove", onDragMove);
+  document.addEventListener("mouseup", endDrag);
+  document.addEventListener("touchmove", onDragMove, { passive: false });
+  document.addEventListener("touchend", endDrag);
+}
+
+function onDragMove(e) {
+  if (!dragState) return;
+  if (e.cancelable) e.preventDefault();
+  const point = getPoint(e);
+  dragState.floatingEl.style.left = `${point.x - dragState.pointerOffset.x}px`;
+  dragState.floatingEl.style.top = `${point.y - dragState.pointerOffset.y}px`;
+  const targetIdx = computeDropTarget(point);
+  updateDropIndicators(targetIdx);
+  dragState.currentTargetIdx = targetIdx;
+}
+
+function computeDropTarget(point) {
+  const itemsEl = document.querySelector(`.items[data-date="${dragState.date}"]`);
+  if (!itemsEl) return dragState.fromIdx;
+  const itemEls = [...itemsEl.querySelectorAll(".item")].filter(el => !el.classList.contains("dragging"));
+  let targetIdx = itemEls.length;
+  for (let i = 0; i < itemEls.length; i++) {
+    const r = itemEls[i].getBoundingClientRect();
+    if (point.y < r.top + r.height / 2) {
+      targetIdx = i;
+      break;
+    }
+  }
+  return targetIdx;
+}
+
+function updateDropIndicators(targetIdx) {
+  document.querySelectorAll(`.drop-indicator[data-date="${dragState.date}"]`).forEach(ind => {
+    const insertIdx = parseInt(ind.dataset.insertIdx, 10);
+    const show = insertIdx === targetIdx
+      && targetIdx !== dragState.fromIdx
+      && !(targetIdx === dragState.fromIdx + 1 && insertIdx === dragState.fromIdx + 1);
+    ind.classList.toggle("visible", show);
+  });
+}
+
+function endDrag() {
+  if (!dragState) return;
+  const { date, fromIdx, sourceEl, floatingEl, currentTargetIdx } = dragState;
+  floatingEl.remove();
+  sourceEl.classList.remove("dragging");
+  document.querySelectorAll(".drop-indicator").forEach(i => i.classList.remove("visible"));
+  if (currentTargetIdx !== fromIdx && currentTargetIdx !== fromIdx + 1) {
+    const t = currentTrip();
+    const items = t.dayItems[date];
+    if (items) {
+      const [moved] = items.splice(fromIdx, 1);
+      let insertAt = currentTargetIdx;
+      if (currentTargetIdx > fromIdx) insertAt -= 1;
+      items.splice(insertAt, 0, moved);
+      renderDayItems(date);
+    }
+  }
+  dragState = null;
+  document.removeEventListener("mousemove", onDragMove);
+  document.removeEventListener("mouseup", endDrag);
+  document.removeEventListener("touchmove", onDragMove);
+  document.removeEventListener("touchend", endDrag);
+}
+
+function getPoint(e) {
+  if (e.touches?.[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  if (e.changedTouches?.[0]) return { x: e.changedTouches[0].clientX, y: e.changedTouches[0].clientY };
+  return { x: e.clientX, y: e.clientY };
+}
+
+/* ======= DISCOVER ======= */
+
+function renderDiscover(area) {
+  const t = currentTrip();
+  if (!t) return;
+  const cities = t.cities;
+  const cityPlaces = PLACES[app.discoverCity] || { stay: [], transport: [], dining: [], sights: [] };
+  const items = cityPlaces[app.discoverCat] || [];
+
+  area.innerHTML = `
+    <div class="city-picker">
+      ${cities.map(c => `
+        <div class="city-btn ${app.discoverCity === c ? 'active' : ''}" onclick="setDiscoverCity('${c}')">
+          ${c}
+        </div>
+      `).join("")}
+    </div>
+    <div class="cat-tabs">
+      <div class="cat-tab ${app.discoverCat === 'transport' ? 'active' : ''}" onclick="setDiscoverCat('transport')">🚄 Transport</div>
+      <div class="cat-tab ${app.discoverCat === 'stay' ? 'active' : ''}" onclick="setDiscoverCat('stay')">🏨 Stay</div>
+      <div class="cat-tab ${app.discoverCat === 'dining' ? 'active' : ''}" onclick="setDiscoverCat('dining')">🍽 Dining</div>
+      <div class="cat-tab ${app.discoverCat === 'sights' ? 'active' : ''}" onclick="setDiscoverCat('sights')">🗺 Sights</div>
+    </div>
+    <div class="suggestions">
+      ${items.length === 0
+        ? `<div style="padding:30px 20px; text-align:center; color:var(--text-tertiary); font-size:13px;">No ${app.discoverCat} suggestions for ${app.discoverCity} yet.</div>`
+        : items.map(p => {
+            const added = isItemAdded(p.id);
+            const ratingHtml = p.rating ? `<div class="sug-rating"><span class="star">★</span> ${p.rating}</div>` : "";
+            const websiteUrl = p.website || `https://www.google.com/search?q=${encodeURIComponent(p.name)}`;
+            return `
+              <div class="suggestion ${added ? 'added' : ''}" onclick="openDetails('${p.id}')">
+                <div class="sug-top">
+                  <div class="sug-name">${p.name}</div>
+                  <div class="sug-right">
+                    ${ratingHtml}
+                    <a href="${websiteUrl}" target="_blank" rel="noopener" class="sug-external" onclick="event.stopPropagation()" title="Open website">↗</a>
+                  </div>
+                </div>
+                <div class="sug-meta">${p.meta}</div>
+                <div class="sug-tags">${p.tags.map(t => `<span class="sug-tag">${t}</span>`).join("")}</div>
+              </div>
+            `;
+          }).join("")
+      }
+    </div>
+  `;
+}
+
+function setDiscoverCity(city) { app.discoverCity = city; render(); }
+function setDiscoverCat(cat) { app.discoverCat = cat; render(); }
+
+function isItemAdded(placeId) {
+  const t = currentTrip();
+  return Object.values(t.dayItems).flat().some(i => i.placeId === placeId);
+}
+
+/* ======= MAP ======= */
+
+function renderMap(area) {
+  const t = currentTrip();
+  if (!t) return;
+
+  // Collect places for the currently-visible city (London in this demo)
+  const cityPlaces = PLACES[app.discoverCity] || {};
+  const allPlaces = [
+    ...(cityPlaces.stay || []),
+    ...(cityPlaces.transport || []),
+    ...(cityPlaces.dining || []),
+    ...(cityPlaces.sights || [])
+  ];
+  const visible = allPlaces.filter(p => app.mapFilters.has(p.cat));
+
+  area.innerHTML = `
+    <div class="city-picker">
+      ${t.cities.map(c => `
+        <div class="city-btn ${app.discoverCity === c ? 'active' : ''}" onclick="setDiscoverCity('${c}')">
+          ${c}
+        </div>
+      `).join("")}
+    </div>
+    <div class="map-container">
+      <div class="map-filters">
+        <div class="map-filter ${app.mapFilters.has('stay') ? 'active' : ''}" data-cat="stay" onclick="toggleMapFilter('stay')"><span class="dot"></span>Stay</div>
+        <div class="map-filter ${app.mapFilters.has('transport') ? 'active' : ''}" data-cat="transport" onclick="toggleMapFilter('transport')"><span class="dot"></span>Transport</div>
+        <div class="map-filter ${app.mapFilters.has('dining') ? 'active' : ''}" data-cat="dining" onclick="toggleMapFilter('dining')"><span class="dot"></span>Dining</div>
+        <div class="map-filter ${app.mapFilters.has('sights') ? 'active' : ''}" data-cat="sights" onclick="toggleMapFilter('sights')"><span class="dot"></span>Sights</div>
+      </div>
+      <div class="map-svg-wrap">
+        <svg class="map-svg" id="map-svg" viewBox="0 0 400 600" preserveAspectRatio="xMidYMid slice"></svg>
+        <div class="map-popup" id="map-popup"></div>
+      </div>
+    </div>
+  `;
+
+  renderMapPins(visible);
+}
+
+function renderMapPins(visible) {
+  const svg = document.getElementById("map-svg");
+  if (!svg) return;
+  svg.innerHTML = "";
+
+  if (!visible.length) {
+    svg.innerHTML = `<text x="200" y="300" text-anchor="middle" font-size="13" fill="#888780">No places match your filters.</text>`;
+    document.getElementById("map-popup").classList.remove("visible");
+    return;
+  }
+
+  const bounds = getBounds(visible);
+  const SVG_W = 400, SVG_H = 600;
+
+  // Background decoration
+  svg.innerHTML = `
+    <path d="M 40 150 Q 120 130 200 170 Q 160 220 100 210 Z" fill="#C8DEB0" opacity="0.45"/>
+    <path d="M 250 280 Q 320 260 360 300 Q 330 340 280 320 Z" fill="#C8DEB0" opacity="0.45"/>
+    <path d="M 0 380 Q 60 350 140 370 T 280 375 T 400 370 L 400 420 Q 280 415 140 420 T 0 430 Z" fill="#B5D4F4" opacity="0.7"/>
+    <line x1="0" y1="260" x2="400" y2="250" stroke="#D4D0C5" stroke-width="1"/>
+    <line x1="0" y1="490" x2="400" y2="500" stroke="#D4D0C5" stroke-width="1"/>
+    <line x1="110" y1="0" x2="105" y2="600" stroke="#D4D0C5" stroke-width="1"/>
+    <line x1="260" y1="0" x2="265" y2="600" stroke="#D4D0C5" stroke-width="1"/>
+  `;
+
+  visible.forEach(p => {
+    const { x, y } = project(p, bounds, SVG_W, SVG_H);
+    const color = `var(--pin-${p.cat})`;
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.classList.add("pin");
+    if (app.selectedPinId === p.id) g.classList.add("selected");
+    g.setAttribute("transform", `translate(${x}, ${y})`);
+    g.innerHTML = `
+      ${app.selectedPinId === p.id ? `<circle r="17" cx="0" cy="-13" fill="none" stroke="${color}" stroke-width="2" opacity="0.4"/>` : ""}
+      <path d="M 0,0 C -8,-7 -11,-14 -11,-18 A 11 11 0 1 1 11,-18 C 11,-14 8,-7 0,0 Z" fill="${color}" stroke="white" stroke-width="1.5"/>
+      <text x="0" y="-15" text-anchor="middle" dominant-baseline="central" fill="white" font-size="10" font-weight="500">${p.cat[0].toUpperCase()}</text>
+    `;
+    g.onclick = (e) => { e.stopPropagation(); selectPin(p); };
+    svg.appendChild(g);
+  });
+
+  if (app.selectedPinId) {
+    const sel = visible.find(p => p.id === app.selectedPinId);
+    if (sel) showMapPopup(sel);
+  }
+}
+
+function selectPin(p) {
+  app.selectedPinId = p.id;
+  render();
+}
+
+function showMapPopup(p) {
+  const popup = document.getElementById("map-popup");
+  if (!popup) return;
+  const ratingText = p.rating ? ` · ★ ${p.rating}` : "";
+  popup.innerHTML = `
+    <div class="popup-name">${p.name}</div>
+    <div class="popup-meta">${p.meta}${ratingText}</div>
+    <div class="popup-actions">
+      <span class="popup-btn" onclick="clearMapPin()">Close</span>
+      <span class="popup-btn popup-btn-primary" onclick="openDetails('${p.id}')">Details</span>
+    </div>
+  `;
+  popup.classList.add("visible");
+}
+
+function clearMapPin() {
+  app.selectedPinId = null;
+  render();
+}
+
+function toggleMapFilter(cat) {
+  if (app.mapFilters.has(cat)) app.mapFilters.delete(cat);
+  else app.mapFilters.add(cat);
+  // Deselect if the currently selected pin's category was turned off
+  if (app.selectedPinId) {
+    const allPlaces = [...(PLACES[app.discoverCity]?.stay || []), ...(PLACES[app.discoverCity]?.transport || []), ...(PLACES[app.discoverCity]?.dining || []), ...(PLACES[app.discoverCity]?.sights || [])];
+    const sel = allPlaces.find(p => p.id === app.selectedPinId);
+    if (!sel || !app.mapFilters.has(sel.cat)) app.selectedPinId = null;
+  }
+  render();
+}
+
+function getBounds(places) {
+  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
+  places.forEach(p => {
+    if (p.lat < minLat) minLat = p.lat;
+    if (p.lat > maxLat) maxLat = p.lat;
+    if (p.lng < minLng) minLng = p.lng;
+    if (p.lng > maxLng) maxLng = p.lng;
+  });
+  const latPad = Math.max((maxLat - minLat) * 0.15, 0.008);
+  const lngPad = Math.max((maxLng - minLng) * 0.15, 0.008);
+  return {
+    minLat: minLat - latPad, maxLat: maxLat + latPad,
+    minLng: minLng - lngPad, maxLng: maxLng + lngPad
+  };
+}
+
+function project(p, b, W, H) {
+  return {
+    x: ((p.lng - b.minLng) / (b.maxLng - b.minLng)) * W,
+    y: H - ((p.lat - b.minLat) / (b.maxLat - b.minLat)) * H
+  };
+}
+
+/* ============================================================
+   SETTINGS SCREEN (compact — full version in settings.html)
+   ============================================================ */
+
+function renderSettings(area) {
+  if (app.settingsPage) {
+    renderSettingsPage(area, app.settingsPage);
+    return;
+  }
+
+  // Build short summaries of current selections to show under each row
+  const summarize = (set, limit = 2) => {
+    const arr = [...set];
+    if (!arr.length) return "None set";
+    if (arr.length <= limit) return arr.join(", ");
+    return `${arr.slice(0, limit).join(", ")} +${arr.length - limit} more`;
+  };
+  const travelSum = `${userSettings.flightClass} · ${userSettings.trainClass}`;
+  const lodgingSum = summarize(userSettings.lodging);
+  const diningSum = `${summarize(userSettings.cuisines)} · ${summarize(userSettings.prices, 1)}`;
+  const sightsSum = summarize(userSettings.sights);
+
+  area.innerHTML = `
+    <div class="settings-profile">
+      <div class="settings-avatar">${user.initials}</div>
+      <div>
+        <div class="settings-name">${user.name}</div>
+        <div class="settings-email">${user.email}</div>
+      </div>
+    </div>
+
+    <div class="settings-section-label">Trip defaults</div>
+    <div class="settings-list">
+      <div class="settings-row" onclick="gotoSettingsPage('travel')">
+        <div class="settings-row-icon">✈</div>
+        <div class="settings-row-text">
+          <div>Travel style</div>
+          <div class="settings-row-sub">${travelSum}</div>
+        </div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+      <div class="settings-row" onclick="gotoSettingsPage('lodging')">
+        <div class="settings-row-icon">🏨</div>
+        <div class="settings-row-text">
+          <div>Lodging preferences</div>
+          <div class="settings-row-sub">${lodgingSum}</div>
+        </div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+      <div class="settings-row" onclick="gotoSettingsPage('dining')">
+        <div class="settings-row-icon">🍽</div>
+        <div class="settings-row-text">
+          <div>Dining preferences</div>
+          <div class="settings-row-sub">${diningSum}</div>
+        </div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+      <div class="settings-row" onclick="gotoSettingsPage('sights')">
+        <div class="settings-row-icon">🗺</div>
+        <div class="settings-row-text">
+          <div>Sightseeing preferences</div>
+          <div class="settings-row-sub">${sightsSum}</div>
+        </div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+    </div>
+
+    <div class="settings-section-label">App</div>
+    <div class="settings-list">
+      <div class="settings-row" onclick="gotoSettingsPage('notifications')">
+        <div class="settings-row-icon">🔔</div>
+        <div class="settings-row-text">Notifications</div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+      <div class="settings-row" onclick="gotoSettingsPage('app')">
+        <div class="settings-row-icon">⚙</div>
+        <div class="settings-row-text">Display & units</div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+    </div>
+
+    <div class="settings-section-label">Account</div>
+    <div class="settings-list">
+      <div class="settings-row" onclick="showToast('Would sign out')">
+        <div class="settings-row-icon">↩</div>
+        <div class="settings-row-text">Sign out</div>
+        <div class="settings-row-chevron">›</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   SETTINGS SUB-PAGES
+   ============================================================ */
+
+function renderSettingsPage(area, page) {
+  if (page === "travel") renderTravelSettings(area);
+  else if (page === "lodging") renderLodgingSettings(area);
+  else if (page === "dining") renderDiningSettings(area);
+  else if (page === "sights") renderSightsSettings(area);
+  else if (page === "notifications") renderNotificationsSettings(area);
+  else if (page === "app") renderAppSettings(area);
+}
+
+function toggleTag(group, tag) {
+  if (SINGLE_SELECT.has(group)) {
+    userSettings[group] = tag;
+  } else {
+    if (userSettings[group].has(tag)) userSettings[group].delete(tag);
+    else userSettings[group].add(tag);
+  }
+  render();
+}
+
+function renderChipGroup(group) {
+  const selected = userSettings[group];
+  const isSingle = SINGLE_SELECT.has(group);
+  return CATALOG[group].map(opt => {
+    const active = isSingle ? selected === opt : selected.has(opt);
+    return `<span class="nt-chip ${active ? 'active' : ''}" onclick="toggleTag('${group}', ${JSON.stringify(opt)})">${opt}</span>`;
+  }).join("");
+}
+
+function renderTravelSettings(area) {
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Flight service class</div>
+        <div class="sp-hint">Your default when creating new trips.</div>
+        <select class="sp-select" onchange="userSettings.flightClass = this.value; render();">
+          ${CATALOG.flightClass.map(c => `<option ${userSettings.flightClass === c ? 'selected' : ''}>${c}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Train service class</div>
+        <select class="sp-select" onchange="userSettings.trainClass = this.value; render();">
+          ${CATALOG.trainClass.map(c => `<option ${userSettings.trainClass === c ? 'selected' : ''}>${c}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Airport & station transfers</div>
+        <div class="sp-hint">How you usually get to and from transit hubs.</div>
+        <div class="nt-chip-group">${renderChipGroup("transfers")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Loyalty programs</div>
+        <div class="sp-hint">We'll prioritize properties and carriers you're enrolled with.</div>
+        <div class="nt-chip-group">${renderChipGroup("loyalty")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderLodgingSettings(area) {
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Preferred property types</div>
+        <div class="sp-hint">Individual trips can narrow this down further.</div>
+        <div class="nt-chip-group">${renderChipGroup("lodging")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Must-have amenities</div>
+        <div class="sp-hint">Only properties offering all of these will be recommended.</div>
+        <div class="nt-chip-group">${renderChipGroup("amenities")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Location preference</div>
+        <div class="nt-chip-group">${renderChipGroup("location")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderDiningSettings(area) {
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Cuisines</div>
+        <div class="sp-hint">We'll surface restaurants matching any of these.</div>
+        <div class="nt-chip-group">${renderChipGroup("cuisines")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Price range</div>
+        <div class="sp-hint">Pick one or more. Most users pick a range like $$ and $$$.</div>
+        <div class="nt-chip-group">${renderChipGroup("prices")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Dietary restrictions</div>
+        <div class="sp-hint">Applied globally — can't be overridden per-trip.</div>
+        <div class="nt-chip-group">${renderChipGroup("dietary")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Meal types you typically plan</div>
+        <div class="sp-hint">Breakfast suggestions only appear when Breakfast is on.</div>
+        <div class="nt-chip-group">${renderChipGroup("meals")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSightsSettings(area) {
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Interests</div>
+        <div class="sp-hint">Categories of attractions you're drawn to.</div>
+        <div class="nt-chip-group">${renderChipGroup("sights")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Pace</div>
+        <div class="sp-hint">How packed you want your days. Affects suggestion density.</div>
+        <div class="nt-chip-group">${renderChipGroup("pace")}</div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Accessibility needs</div>
+        <div class="sp-hint">Filters out places that don't meet these.</div>
+        <div class="nt-chip-group">${renderChipGroup("accessibility")}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderNotificationsSettings(area) {
+  const notifLabels = {
+    notifyCheckins: { label: "Check-in reminders", desc: "24 hours before check-in for each stay" },
+    notifyDepartures: { label: "Departure reminders", desc: "3 hours before flights, 1 hour before trains" },
+    notifyDayBefore: { label: "Day-before summary", desc: "Morning overview of tomorrow's plans" },
+    notifyPriceDrops: { label: "Price drop alerts", desc: "When saved flights or hotels get cheaper" },
+    notifyPush: { label: "Push notifications", desc: "" },
+    notifyEmail: { label: "Email", desc: "" },
+    notifySms: { label: "SMS", desc: "" }
+  };
+  const renderToggle = (key) => `
+    <div class="sp-toggle-row" onclick="userSettings.${key} = !userSettings.${key}; render();">
+      <div class="sp-toggle-info">
+        <div class="sp-toggle-label">${notifLabels[key].label}</div>
+        ${notifLabels[key].desc ? `<div class="sp-toggle-desc">${notifLabels[key].desc}</div>` : ""}
+      </div>
+      <div class="sp-toggle ${userSettings[key] ? 'on' : ''}"></div>
+    </div>
+  `;
+
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Trip reminders</div>
+        ${renderToggle('notifyCheckins')}
+        ${renderToggle('notifyDepartures')}
+        ${renderToggle('notifyDayBefore')}
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Suggestions</div>
+        ${renderToggle('notifyPriceDrops')}
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Delivery</div>
+        ${renderToggle('notifyPush')}
+        ${renderToggle('notifyEmail')}
+        ${renderToggle('notifySms')}
+      </div>
+    </div>
+  `;
+}
+
+function renderAppSettings(area) {
+  area.innerHTML = `
+    <div class="sp-body">
+      <div class="sp-section">
+        <div class="sp-section-title">Display</div>
+        <div class="sp-field">
+          <label class="sp-label">Date format</label>
+          <select class="sp-select" onchange="userSettings.dateFormat = this.value; render();">
+            <option value="US" ${userSettings.dateFormat === "US" ? "selected" : ""}>May 10, 2026 (US)</option>
+            <option value="EU" ${userSettings.dateFormat === "EU" ? "selected" : ""}>10 May 2026 (Europe)</option>
+            <option value="ISO" ${userSettings.dateFormat === "ISO" ? "selected" : ""}>2026-05-10 (ISO)</option>
+          </select>
+        </div>
+        <div class="sp-field">
+          <label class="sp-label">Theme</label>
+          <select class="sp-select" onchange="userSettings.theme = this.value; render();">
+            <option value="system" ${userSettings.theme === "system" ? "selected" : ""}>System (follow OS)</option>
+            <option value="light" ${userSettings.theme === "light" ? "selected" : ""}>Light</option>
+            <option value="dark" ${userSettings.theme === "dark" ? "selected" : ""}>Dark</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="sp-section">
+        <div class="sp-section-title">Units</div>
+        <div class="sp-field">
+          <label class="sp-label">Distance</label>
+          <select class="sp-select" onchange="userSettings.distanceUnit = this.value; render();">
+            <option value="miles" ${userSettings.distanceUnit === "miles" ? "selected" : ""}>Miles</option>
+            <option value="km" ${userSettings.distanceUnit === "km" ? "selected" : ""}>Kilometers</option>
+          </select>
+        </div>
+        <div class="sp-field">
+          <label class="sp-label">Temperature</label>
+          <select class="sp-select" onchange="userSettings.tempUnit = this.value; render();">
+            <option value="F" ${userSettings.tempUnit === "F" ? "selected" : ""}>Fahrenheit</option>
+            <option value="C" ${userSettings.tempUnit === "C" ? "selected" : ""}>Celsius</option>
+          </select>
+        </div>
+        <div class="sp-field">
+          <label class="sp-label">Currency</label>
+          <select class="sp-select" onchange="userSettings.currency = this.value; render();">
+            <option value="USD" ${userSettings.currency === "USD" ? "selected" : ""}>USD ($)</option>
+            <option value="EUR" ${userSettings.currency === "EUR" ? "selected" : ""}>EUR (€)</option>
+            <option value="GBP" ${userSettings.currency === "GBP" ? "selected" : ""}>GBP (£)</option>
+            <option value="JPY" ${userSettings.currency === "JPY" ? "selected" : ""}>JPY (¥)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   MODALS: new trip + details
+   ============================================================ */
+
+function openModal(html) {
+  const m = document.getElementById("modal");
+  m.innerHTML = html;
+  m.classList.add("active");
+  m.onclick = (e) => { if (e.target === m) closeModal(); };
+}
+
+function closeModal() {
+  const m = document.getElementById("modal");
+  m.classList.remove("active");
+  setTimeout(() => { m.innerHTML = ""; }, 250);
+}
+
+// ----- NEW TRIP -----
+function openNewTrip() {
+  // Pre-fill from Settings — the dialog gets a snapshot that's fully editable
+  const state = {
+    name: "",
+    primaryName: user.name,
+    companions: [],
+    origin: user.homeCity,
+    originDate: "",
+    stayCity: "",
+    returnDate: "",
+    // Two legs: outbound (origin → stay) and return (stay → home)
+    outboundLeg: { mode: "Flight", serviceClass: userSettings.flightClass },
+    returnLeg: { mode: "Flight", serviceClass: userSettings.flightClass },
+    // Preference snapshots (copied from Settings; editable in-dialog)
+    cuisines: new Set(userSettings.cuisines),
+    sights: new Set(userSettings.sights),
+    lodging: new Set(userSettings.lodging),
+    flightClass: userSettings.flightClass,
+    // Frozen snapshot of what Settings held at open — used to detect overrides
+    snapshot: {
+      origin: user.homeCity,
+      cuisines: new Set(userSettings.cuisines),
+      sights: new Set(userSettings.sights),
+      lodging: new Set(userSettings.lodging),
+      flightClass: userSettings.flightClass
+    }
+  };
+  let nextCompanionId = 1;
+
+  function isValid() {
+    return state.primaryName.trim() && state.origin.trim() && state.originDate && state.returnDate;
+  }
+
+  function setsEqual(a, b) {
+    if (a.size !== b.size) return false;
+    for (const x of a) if (!b.has(x)) return false;
+    return true;
+  }
+
+  // Service class options vary by mode
+  function classOptions(mode, selected) {
+    let opts;
+    if (mode === "Flight") opts = ["Economy", "Premium economy", "Business", "First class"];
+    else if (mode === "Train") opts = ["Standard", "Standard Premier / Comfort", "First class", "Business Premier"];
+    else if (mode === "Cruise") opts = ["Interior", "Ocean view", "Balcony", "Suite"];
+    else opts = ["Standard", "Premium"]; // Car, Bus
+    return opts.map(c => `<option ${selected === c ? 'selected' : ''}>${c}</option>`).join("");
+  }
+
+  function badgeFor(field) {
+    // Returns "from Settings" or "overridden"
+    const snap = state.snapshot;
+    let matches = true;
+    if (field === "cuisines") matches = setsEqual(state.cuisines, snap.cuisines);
+    else if (field === "sights") matches = setsEqual(state.sights, snap.sights);
+    else if (field === "lodging") matches = setsEqual(state.lodging, snap.lodging);
+    else if (field === "flightClass") matches = state.flightClass === snap.flightClass;
+    else if (field === "origin") matches = state.origin === snap.origin;
+    return matches
+      ? '<span class="nt-source-badge">from Settings</span>'
+      : '<span class="nt-source-badge overridden">overridden</span>';
+  }
+
+  function chipRowFor(field, options) {
+    return options.map(opt => {
+      const active = state[field].has(opt);
+      const fromSettings = active && state.snapshot[field].has(opt);
+      // Chip gets a small dot if it came from Settings AND is still active
+      return `<span class="nt-chip ${active ? 'active' : ''} ${fromSettings ? 'from-settings' : ''}"
+                    onclick="toggleNtChip(event, '${field}', ${JSON.stringify(opt)})">${opt}</span>`;
+    }).join("");
+  }
+
+  // Expose toggle handler on window so inline onclick can reach it
+  window.toggleNtChip = (e, field, opt) => {
+    e.stopPropagation();
+    if (state[field].has(opt)) state[field].delete(opt);
+    else state[field].add(opt);
+    renderNewTrip();
+  };
+
+  function renderNewTrip() {
+    const html = `
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <div class="modal-title">New trip</div>
+          <div class="modal-close" onclick="closeModal()">×</div>
+        </div>
+        <div class="modal-body" id="nt-body">
+          <div class="nt-section">
+            <div class="nt-section-title">The basics</div>
+            <div class="nt-field">
+              <label class="nt-label">Trip name</label>
+              <input type="text" id="nt-name" value="${state.name}" placeholder="e.g. Europe trip">
+            </div>
+            <div class="nt-field">
+              <label class="nt-label">Travelers</label>
+              <div class="nt-traveler-row">
+                <input type="text" id="nt-primary" value="${state.primaryName}" placeholder="Primary traveler (required)" class="${state.primaryName.trim() ? '' : 'invalid'}">
+                <span class="nt-primary-pill" title="The primary traveler can't be removed">PRIMARY</span>
+              </div>
+              ${state.companions.map(c => `
+                <div class="nt-traveler-row">
+                  <input type="text" value="${c.name}" data-companion-id="${c.id}" placeholder="Another traveler">
+                  <div class="nt-remove" data-remove="${c.id}">×</div>
+                </div>
+              `).join("")}
+              ${!state.primaryName.trim() ? '<div class="nt-hint">A trip needs at least a primary traveler.</div>' : ""}
+              <span class="nt-add-link" id="nt-add-companion">+ Add traveler</span>
+            </div>
+          </div>
+
+          <div class="nt-section">
+            <div class="nt-section-title">Route</div>
+            <div class="nt-stay">
+              <div class="nt-stay-header">
+                <span class="nt-stay-label origin">Start</span>
+              </div>
+              <div class="nt-stay-body two-col">
+                <div>
+                  <div class="nt-label">Departure city ${badgeFor("origin")}</div>
+                  <input type="text" id="nt-origin" value="${state.origin}" placeholder="Where from">
+                </div>
+                <div>
+                  <div class="nt-label">Departing</div>
+                  <input type="date" id="nt-origin-date" value="${state.originDate}">
+                </div>
+              </div>
+            </div>
+            <div class="nt-transit">
+              <div class="nt-transit-card nt-transit-editable">
+                <div class="nt-transit-row">
+                  <label class="nt-transit-label">Mode</label>
+                  <select class="nt-select nt-transit-select" data-leg="outbound" data-field="mode">
+                    ${["Flight","Train","Car","Bus","Cruise"].map(m => `<option ${state.outboundLeg.mode === m ? 'selected' : ''}>${m}</option>`).join("")}
+                  </select>
+                </div>
+                <div class="nt-transit-row">
+                  <label class="nt-transit-label">Class</label>
+                  <select class="nt-select nt-transit-select" data-leg="outbound" data-field="serviceClass">
+                    ${classOptions(state.outboundLeg.mode, state.outboundLeg.serviceClass)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="nt-stay">
+              <div class="nt-stay-header">
+                <span class="nt-stay-label">Stay 1</span>
+              </div>
+              <div class="nt-stay-body two-col">
+                <div>
+                  <div class="nt-label">City</div>
+                  <input type="text" id="nt-stay-city" value="${state.stayCity}" placeholder="Destination">
+                </div>
+                <div></div>
+              </div>
+            </div>
+            <div class="nt-transit">
+              <div class="nt-transit-card nt-transit-editable">
+                <div class="nt-transit-row">
+                  <label class="nt-transit-label">Mode</label>
+                  <select class="nt-select nt-transit-select" data-leg="return" data-field="mode">
+                    ${["Flight","Train","Car","Bus","Cruise"].map(m => `<option ${state.returnLeg.mode === m ? 'selected' : ''}>${m}</option>`).join("")}
+                  </select>
+                </div>
+                <div class="nt-transit-row">
+                  <label class="nt-transit-label">Class</label>
+                  <select class="nt-select nt-transit-select" data-leg="return" data-field="serviceClass">
+                    ${classOptions(state.returnLeg.mode, state.returnLeg.serviceClass)}
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="nt-stay">
+              <div class="nt-stay-header">
+                <span class="nt-stay-label return">Return</span>
+              </div>
+              <div class="nt-stay-body two-col">
+                <div>
+                  <div class="nt-label">Return city</div>
+                  <input type="text" value="${state.origin}" disabled style="opacity:0.6">
+                </div>
+                <div>
+                  <div class="nt-label">Arriving</div>
+                  <input type="date" id="nt-return-date" value="${state.returnDate}">
+                </div>
+              </div>
+            </div>
+            <div class="nt-add-stay">+ Add another city</div>
+          </div>
+
+          <div class="nt-section">
+            <div class="nt-section-title">Preferences for this trip</div>
+            <div class="nt-prefs-hint">Pre-filled from your Settings. Tap any chip to override for this trip only.</div>
+
+            <div class="nt-field">
+              <label class="nt-label">Flight class ${badgeFor("flightClass")}</label>
+              <select id="nt-flight-class" class="nt-select">
+                ${["Economy","Premium economy","Business","First class"].map(c =>
+                  `<option ${state.flightClass === c ? 'selected' : ''}>${c}</option>`
+                ).join("")}
+              </select>
+            </div>
+
+            <div class="nt-field">
+              <label class="nt-label">Lodging ${badgeFor("lodging")}</label>
+              <div class="nt-chip-group">
+                ${chipRowFor("lodging", ["Hotel", "Boutique hotel", "Airbnb / VRBO", "Resort"])}
+              </div>
+            </div>
+
+            <div class="nt-field">
+              <label class="nt-label">Cuisines ${badgeFor("cuisines")}</label>
+              <div class="nt-chip-group">
+                ${chipRowFor("cuisines", ["Local / regional", "Italian", "French", "Japanese", "Mediterranean"])}
+              </div>
+            </div>
+
+            <div class="nt-field">
+              <label class="nt-label">Sightseeing ${badgeFor("sights")}</label>
+              <div class="nt-chip-group">
+                ${chipRowFor("sights", ["Architecture", "Museums", "Art galleries", "Historical sites", "Local neighborhoods", "Nature / parks"])}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <span class="btn" onclick="closeModal()">Cancel</span>
+          <span class="btn btn-primary ${isValid() ? '' : 'disabled'}" id="nt-create">Create trip</span>
+        </div>
+      </div>
+    `;
+    openModal(html);
+
+    // Wire inputs
+    const primaryInput = document.getElementById("nt-primary");
+    primaryInput.oninput = () => {
+      state.primaryName = primaryInput.value;
+      primaryInput.classList.toggle("invalid", !primaryInput.value.trim());
+      document.getElementById("nt-create").classList.toggle("disabled", !isValid());
+      let hint = document.querySelector(".nt-hint");
+      if (!primaryInput.value.trim() && !hint) {
+        hint = document.createElement("div");
+        hint.className = "nt-hint";
+        hint.textContent = "A trip needs at least a primary traveler.";
+        primaryInput.closest(".nt-field").insertBefore(hint, document.getElementById("nt-add-companion"));
+      } else if (primaryInput.value.trim() && hint) {
+        hint.remove();
+      }
+    };
+
+    document.getElementById("nt-name").oninput = (e) => { state.name = e.target.value; };
+    document.getElementById("nt-origin").oninput = (e) => { state.origin = e.target.value; updateCreateBtn(); };
+    const originDateInp = document.getElementById("nt-origin-date");
+    const originDateHandler = (e) => { state.originDate = e.target.value; updateCreateBtn(); };
+    originDateInp.oninput = originDateHandler;
+    originDateInp.onchange = originDateHandler;
+    document.getElementById("nt-stay-city").oninput = (e) => { state.stayCity = e.target.value; };
+    const returnDateInp = document.getElementById("nt-return-date");
+    const returnDateHandler = (e) => { state.returnDate = e.target.value; updateCreateBtn(); };
+    returnDateInp.oninput = returnDateHandler;
+    returnDateInp.onchange = returnDateHandler;
+    document.getElementById("nt-flight-class").onchange = (e) => {
+      state.flightClass = e.target.value;
+      renderNewTrip();
+    };
+
+    function updateCreateBtn() {
+      document.getElementById("nt-create").classList.toggle("disabled", !isValid());
+    }
+
+    document.querySelectorAll('input[data-companion-id]').forEach(inp => {
+      inp.oninput = () => {
+        const c = state.companions.find(x => x.id === +inp.dataset.companionId);
+        if (c) c.name = inp.value;
+      };
+    });
+    document.querySelectorAll('[data-remove]').forEach(btn => {
+      btn.onclick = () => {
+        state.companions = state.companions.filter(c => c.id !== +btn.dataset.remove);
+        renderNewTrip();
+      };
+    });
+    document.getElementById("nt-add-companion").onclick = () => {
+      state.companions.push({ id: nextCompanionId++, name: "" });
+      renderNewTrip();
+    };
+
+    // Transit leg selects
+    document.querySelectorAll('select[data-leg]').forEach(sel => {
+      sel.onchange = () => {
+        const leg = sel.dataset.leg === "outbound" ? state.outboundLeg : state.returnLeg;
+        leg[sel.dataset.field] = sel.value;
+        // If mode changed, service class options change too — re-render
+        if (sel.dataset.field === "mode") {
+          // Reset to a valid default for the new mode
+          leg.serviceClass = sel.value === "Flight" ? userSettings.flightClass : (sel.value === "Train" ? userSettings.trainClass : "Standard");
+          renderNewTrip();
+        }
+      };
+    });
+
+    document.getElementById("nt-create").onclick = () => {
+      if (!isValid()) {
+        primaryInput.focus();
+        return;
+      }
+      const newTrip = {
+        id: "trip-new-" + Date.now(),
+        name: state.name || "New trip",
+        cities: state.stayCity ? [state.stayCity] : [],
+        origin: state.origin,
+        originDate: state.originDate,
+        returnDate: state.returnDate,
+        status: "upcoming",
+        travelers: [
+          { id: 1, name: state.primaryName, primary: true },
+          ...state.companions.filter(c => c.name.trim()).map((c, i) => ({ id: i + 2, name: c.name, primary: false }))
+        ],
+        stays: state.stayCity ? [{
+          id: "ns1",
+          city: state.stayCity,
+          checkIn: state.originDate,
+          checkOut: state.returnDate
+        }] : [],
+        dayItems: {},
+        // Snapshot of preferences at creation time (the immutability rule)
+        preferences: {
+          cuisines: [...state.cuisines],
+          sights: [...state.sights],
+          lodging: [...state.lodging],
+          flightClass: state.flightClass
+        }
+      };
+      trips.unshift(newTrip);
+      closeModal();
+      showToast("Trip created");
+      render();
+    };
+  }
+
+  renderNewTrip();
+}
+
+// ----- DETAILS MODAL -----
+function openDetails(placeId) {
+  const p = findPlace(placeId);
+  if (!p) return;
+  const added = isItemAdded(p.id);
+  const ratingLine = p.rating ? `★ ${p.rating} · ${p.reviews?.toLocaleString() || 0} reviews` : "No reviews yet";
+  const hoursHtml = p.hours
+    ? `<div class="hours-list">${p.hours.map((h, i) => `<div class="${i === 4 ? 'today' : ''}">${h}</div>`).join("")}</div>`
+    : "";
+
+  const html = `
+    <div class="modal-sheet" style="max-height: 92%;">
+      <div class="details-photos">
+        <a href="${p.website || `https://www.google.com/search?q=${encodeURIComponent(p.name)}`}" target="_blank" rel="noopener" class="details-photo-main-link">
+          <div class="details-photo-main">
+            <div class="details-photo-placeholder">📷 Photo 1 of 8</div>
+            <div class="details-photo-visit">View on ${p.website ? (new URL(p.website)).hostname.replace(/^www\./, '') : 'web'} ↗</div>
+          </div>
+        </a>
+        <div class="details-close details-close-floating" onclick="closeModal()">×</div>
+        <div class="details-photo-strip">
+          <div class="details-photo-thumb active"></div>
+          <div class="details-photo-thumb" style="background: linear-gradient(135deg, #9FB8A8 0%, #7E9E8C 100%);"></div>
+          <div class="details-photo-thumb" style="background: linear-gradient(135deg, #C8B890 0%, #A89E78 100%);"></div>
+          <div class="details-photo-thumb" style="background: linear-gradient(135deg, #B8B0C0 0%, #9690A0 100%);"></div>
+          <div class="details-photo-thumb" style="background: linear-gradient(135deg, #C89890 0%, #A87878 100%);"></div>
+          <div class="details-photo-thumb more">+3</div>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <div class="details-body">
+          <h2 class="details-name">${p.name}</h2>
+          <div class="details-sub">
+            <span>${ratingLine}</span>
+          </div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap; margin-top:8px;">
+            ${p.tags.map(t => `<span class="sug-tag">${t}</span>`).join("")}
+          </div>
+
+          <div class="details-section">
+            <div class="info-row">
+              <div class="info-icon">📍</div>
+              <div class="info-value">
+                <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' ' + (p.address || ''))}" target="_blank" rel="noopener" class="info-link">${p.address || "—"}</a>
+              </div>
+            </div>
+            ${p.phone ? `<div class="info-row"><div class="info-icon">📞</div><div class="info-value"><a href="tel:${p.phone.replace(/\s/g, '')}" class="info-link">${p.phone}</a></div></div>` : ""}
+            ${p.website ? `<div class="info-row"><div class="info-icon">🌐</div><div class="info-value"><a href="${p.website}" target="_blank" rel="noopener" class="info-link info-link-accent">Visit website ↗</a></div></div>` : `<div class="info-row"><div class="info-icon">🌐</div><div class="info-value"><a href="https://www.google.com/search?q=${encodeURIComponent(p.name)}" target="_blank" rel="noopener" class="info-link info-link-accent">Search online ↗</a></div></div>`}
+            ${p.hours ? `<div class="info-row"><div class="info-icon">🕐</div><div class="info-value"><span class="open-now">Open now</span>${hoursHtml}</div></div>` : ""}
+          </div>
+
+          ${p.cat !== "transport" ? `
+          <div class="details-section">
+            <div class="details-section-title">Recent reviews</div>
+            <div class="review">
+              <div class="review-top">
+                <div class="review-author">Emma R.</div>
+                <div class="review-stars">★★★★★</div>
+              </div>
+              <div class="review-text">Absolutely worth the visit. Well organized, lots to see, very friendly staff.</div>
+            </div>
+            <div class="review">
+              <div class="review-top">
+                <div class="review-author">David L.</div>
+                <div class="review-stars">★★★★</div>
+              </div>
+              <div class="review-text">Great experience overall. Can get busy on weekends but worth it.</div>
+            </div>
+          </div>
+          ` : ""}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="btn" onclick="closeModal()">Close</span>
+        <span class="btn btn-primary" onclick="showDayPicker('${p.id}')">${added ? '+ Add to another day' : '+ Add to day'}</span>
+      </div>
+      <div class="day-menu" id="day-menu"></div>
+    </div>
+  `;
+  openModal(html);
+}
+
+function openDetailsFromItem(itemId) {
+  const t = currentTrip();
+  const item = Object.values(t.dayItems).flat().find(i => i.id === itemId);
+  if (!item) return;
+  if (item.placeId) {
+    openDetails(item.placeId);
+  }
+  // For non-place items (like custom transit), no details modal for now
+}
+
+function findPlace(placeId) {
+  for (const city of Object.values(PLACES)) {
+    for (const cat of Object.values(city)) {
+      const found = cat.find(p => p.id === placeId);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function showDayPicker(placeId) {
+  const menu = document.getElementById("day-menu");
+  if (!menu) return;
+  const t = currentTrip();
+  const p = findPlace(placeId);
+  const fmtDate = (d) => new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  const getDates = () => {
+    const dates = []; let d = new Date(t.originDate); const end = new Date(t.returnDate);
+    while (d <= end) { dates.push(d.toISOString().slice(0, 10)); d.setDate(d.getDate() + 1); }
+    return dates;
+  };
+  const dates = getDates();
+  const cityForDate = (date) => {
+    const stay = t.stays.find(s => date >= s.checkIn && date < s.checkOut);
+    if (stay) return stay.city;
+    return null;
+  };
+  menu.innerHTML = dates.map(date => {
+    const dayCity = cityForDate(date);
+    // city-matching: the place belongs to one of our known cities
+    let mismatch = false;
+    if (dayCity) {
+      // Look up which city this place belongs to
+      for (const [cityName, cats] of Object.entries(PLACES)) {
+        if (Object.values(cats).some(catArr => catArr.find(x => x.id === p.id))) {
+          if (cityName !== dayCity) mismatch = true;
+          break;
+        }
+      }
+    }
+    return `
+      <div class="day-menu-item ${mismatch ? 'mismatch' : ''}" onclick="addToDay('${placeId}', '${date}', ${mismatch})">
+        <span>${fmtDate(date)}${dayCity ? ` <span style="color:var(--text-tertiary)">· ${dayCity}</span>` : ''}</span>
+        ${mismatch ? '<span style="font-size:10px; color:var(--text-danger);">Different city</span>' : ''}
+      </div>
+    `;
+  }).join("");
+  menu.classList.add("active");
+  // Close on outside click
+  setTimeout(() => {
+    const handler = (e) => {
+      if (!menu.contains(e.target)) {
+        menu.classList.remove("active");
+        document.removeEventListener("click", handler);
+      }
+    };
+    document.addEventListener("click", handler);
+  }, 10);
+}
+
+function addToDay(placeId, date, isMismatch) {
+  if (isMismatch && !confirm("This place is in a different city than this day. Add anyway?")) {
+    document.getElementById("day-menu")?.classList.remove("active");
+    return;
+  }
+  const t = currentTrip();
+  const p = findPlace(placeId);
+  if (!p) return;
+  if (!t.dayItems[date]) t.dayItems[date] = [];
+  // No duplicates
+  if (t.dayItems[date].some(i => i.placeId === placeId)) {
+    showToast("Already added to this day");
+    document.getElementById("day-menu")?.classList.remove("active");
+    return;
+  }
+  t.dayItems[date].push({
+    id: "di-" + Date.now(),
+    category: p.cat,
+    placeId: p.id,
+    name: p.name,
+    sub: p.meta,
+    time: ""
+  });
+  document.getElementById("day-menu")?.classList.remove("active");
+  closeModal();
+  showToast("Added");
+  render();
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+render();
+</script>
+
+</body>
+</html>
